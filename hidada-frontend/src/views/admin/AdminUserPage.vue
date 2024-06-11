@@ -10,12 +10,14 @@
     >
       <a-form-item field="userName" label="用户名">
         <a-input
+          allow-clear
           v-model="formSearchParams.userName"
           placeholder="请输入用户名..."
         />
       </a-form-item>
       <a-form-item field="userProfile" label="用户简介">
         <a-input
+          allow-clear
           v-model="formSearchParams.userProfile"
           placeholder="请输入用户简介..."
         />
@@ -41,6 +43,12 @@
       <template #userAvatar="{ record }">
         <a-image width="64" :src="record.userAvatar" />
       </template>
+      <template #createTime="{ record }">
+        {{ dayjs(record.createTime).format("YYYY-MM-DD HH:mm:ss") }}
+      </template>
+      <template #updateTime="{ record }">
+        {{ dayjs(record.updateTime).format("YYYY-MM-DD HH:mm:ss") }}
+      </template>
       <template #optional="{ record }">
         <a-space>
           <a-button status="danger" @click="doDelete(record)">删除</a-button>
@@ -58,6 +66,7 @@ import {
 } from "@/api/userController";
 import API from "@/api";
 import { Message } from "@arco-design/web-vue";
+import dayjs from "dayjs";
 
 const formSearchParams = ref<API.UserQueryRequest>({});
 
@@ -92,6 +101,14 @@ const pageChange = (page: number) => {
   };
 };
 
+const doSearch = () => {
+  searchParams.value = { ...initSearchParams, ...formSearchParams.value };
+};
+
+watchEffect(() => {
+  loadData();
+});
+
 const doDelete = async (record: API.User) => {
   if (!record.id) {
     return;
@@ -103,14 +120,6 @@ const doDelete = async (record: API.User) => {
     Message.error("删除失败，" + res.data.message);
   }
 };
-
-const doSearch = () => {
-  searchParams.value = { ...initSearchParams, ...formSearchParams.value };
-};
-
-watchEffect(() => {
-  loadData();
-});
 
 // 表格列配置
 const columns = [
