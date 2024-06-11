@@ -3,7 +3,6 @@
     <h2 style="margin-bottom: 16px">设置题目</h2>
     <a-form
       :model="questionContent"
-      :style="{ width: '480px' }"
       label-align="left"
       auto-label-width
       @submit="handleSubmit"
@@ -12,84 +11,185 @@
         {{ appId }}
       </a-form-item>
       <a-form-item label="题目列表" :content-flex="false" :merge-props="false">
-        <a-button @click="addQuestion(questionContent.length)"
-          >底部添加题目
-        </a-button>
+        <a-space size="medium">
+          <a-button @click="addQuestion(questionContent.length)"
+            >底部添加题目
+          </a-button>
+          <AiGenerateQuestionDrawer
+            :appId="appId"
+            :onSuccess="onAiGenerateSuccess"
+          />
+        </a-space>
         <!--遍历每道一幕-->
-        <div v-for="(question, index) in questionContent" :key="index">
-          <h3>题目 {{ index + 1 }}</h3>
-          <a-space size="large">
-            <a-button size="small" @click="addQuestion(index + 1)"
-              >添加题目
-            </a-button>
-            <a-button
-              size="small"
-              status="danger"
-              @click="deleteQuestion(index)"
-              >删除题目
-            </a-button>
-          </a-space>
-          <a-form-item field="posts.post1" :label="`题目 ${index + 1} 标题`">
-            <a-input v-model="question.title" placeholder="请输入标题..." />
-          </a-form-item>
-          <!--题目选项-->
-          <a-space size="large">
-            <h4>题目 {{ index + 1 }} 选项列表</h4>
-            <a-button
-              size="small"
-              @click="
-                addQuestionOption(
-                  question,
-                  question.options ? question.options.length : 0
-                )
-              "
-              >底部添加选项
-            </a-button>
-          </a-space>
-          <a-form-item
-            v-for="(option, optionIndex) in question.options"
-            :key="optionIndex"
-            :label="`选项${optionIndex + 1}`"
-            :content-flex="false"
-            :merge-props="false"
-          >
-            <a-form-item label="选项 key">
-              <a-input v-model="option.key" placeholder="请输入选项key..." />
-            </a-form-item>
-            <a-form-item label="选项 值">
-              <a-input v-model="option.value" placeholder="请输入选项值..." />
-            </a-form-item>
-            <a-form-item
-              label="选项 结果"
-              v-if="app.appType === APP_TYPE_ENUM.TEST"
-            >
-              <a-input
-                v-model="option.result"
-                placeholder="请输入选项结果..."
-              />
-            </a-form-item>
-            <a-form-item
-              label="选项 得分"
-              v-if="app.appType === APP_TYPE_ENUM.SCORE"
-            >
-              <a-input v-model="option.score" placeholder="请输入选项得分..." />
-            </a-form-item>
-            <a-space size="large">
-              <a-button
-                size="mini"
-                @click="addQuestionOption(question, optionIndex + 1)"
-                >添加选项
-              </a-button>
-              <a-button
-                size="mini"
-                status="danger"
-                @click="deleteQuestionOption(question, optionIndex)"
-                >删除选项
-              </a-button>
-            </a-space>
-          </a-form-item>
-          <!--题目选项结尾-->
-        </div>
+        <a-list
+          class="list-demo-action-layout"
+          :grid-props="{ gutter: [20, 20], sm: 24, md: 24, lg: 24, xl: 12 }"
+          :bordered="false"
+          :data="questionContent"
+        >
+          <template #item="{ item, index }">
+            <a-card>
+              <a-space size="large">
+                <h3>题目 {{ index + 1 }}</h3>
+                <a-button size="small" @click="addQuestion(index + 1)"
+                  >添加题目
+                </a-button>
+                <a-button
+                  size="small"
+                  status="danger"
+                  @click="deleteQuestion(index)"
+                  >删除题目
+                </a-button>
+              </a-space>
+              <a-form-item
+                field="posts.post1"
+                :label="`题目 ${index + 1} 标题`"
+              >
+                <a-input v-model="item.title" placeholder="请输入标题..." />
+              </a-form-item>
+              <!--题目选项-->
+              <a-space size="large">
+                <h4>题目 {{ index + 1 }} 选项列表</h4>
+                <a-button
+                  size="small"
+                  @click="
+                    addQuestionOption(
+                      item,
+                      item.options ? item.options.length : 0
+                    )
+                  "
+                  >底部添加选项
+                </a-button>
+              </a-space>
+              <a-form-item
+                v-for="(option, optionIndex) in item.options"
+                :key="optionIndex"
+                :label="`选项${optionIndex + 1}`"
+                :content-flex="false"
+                :merge-props="false"
+              >
+                <a-form-item label="选项 key">
+                  <a-input
+                    v-model="option.key"
+                    placeholder="请输入选项key..."
+                  />
+                </a-form-item>
+                <a-form-item label="选项 值">
+                  <a-input
+                    v-model="option.value"
+                    placeholder="请输入选项值..."
+                  />
+                </a-form-item>
+                <a-form-item
+                  label="选项 结果"
+                  v-if="app.appType === APP_TYPE_ENUM.TEST"
+                >
+                  <a-input
+                    v-model="option.result"
+                    placeholder="请输入选项结果..."
+                  />
+                </a-form-item>
+                <a-form-item
+                  label="选项 得分"
+                  v-if="app.appType === APP_TYPE_ENUM.SCORE"
+                >
+                  <a-input
+                    v-model="option.score"
+                    placeholder="请输入选项得分..."
+                  />
+                </a-form-item>
+                <a-space size="large">
+                  <a-button
+                    size="mini"
+                    @click="addQuestionOption(item, optionIndex + 1)"
+                    >添加选项
+                  </a-button>
+                  <a-button
+                    size="mini"
+                    status="danger"
+                    @click="deleteQuestionOption(item, optionIndex)"
+                    >删除选项
+                  </a-button>
+                </a-space>
+              </a-form-item>
+              <!--题目选项结尾-->
+            </a-card>
+          </template>
+        </a-list>
+        <!--        <a-card v-for="(question, index) in questionContent" :key="index">-->
+        <!--          <h3>题目 {{ index + 1 }}</h3>-->
+        <!--          <a-space size="large">-->
+        <!--            <a-button size="small" @click="addQuestion(index + 1)"-->
+        <!--              >添加题目-->
+        <!--            </a-button>-->
+        <!--            <a-button-->
+        <!--              size="small"-->
+        <!--              status="danger"-->
+        <!--              @click="deleteQuestion(index)"-->
+        <!--              >删除题目-->
+        <!--            </a-button>-->
+        <!--          </a-space>-->
+        <!--          <a-form-item field="posts.post1" :label="`题目 ${index + 1} 标题`">-->
+        <!--            <a-input v-model="question.title" placeholder="请输入标题..." />-->
+        <!--          </a-form-item>-->
+        <!--          &lt;!&ndash;题目选项&ndash;&gt;-->
+        <!--          <a-space size="large">-->
+        <!--            <h4>题目 {{ index + 1 }} 选项列表</h4>-->
+        <!--            <a-button-->
+        <!--              size="small"-->
+        <!--              @click="-->
+        <!--                addQuestionOption(-->
+        <!--                  question,-->
+        <!--                  question.options ? question.options.length : 0-->
+        <!--                )-->
+        <!--              "-->
+        <!--              >底部添加选项-->
+        <!--            </a-button>-->
+        <!--          </a-space>-->
+        <!--          <a-form-item-->
+        <!--            v-for="(option, optionIndex) in question.options"-->
+        <!--            :key="optionIndex"-->
+        <!--            :label="`选项${optionIndex + 1}`"-->
+        <!--            :content-flex="false"-->
+        <!--            :merge-props="false"-->
+        <!--          >-->
+        <!--            <a-form-item label="选项 key">-->
+        <!--              <a-input v-model="option.key" placeholder="请输入选项key..." />-->
+        <!--            </a-form-item>-->
+        <!--            <a-form-item label="选项 值">-->
+        <!--              <a-input v-model="option.value" placeholder="请输入选项值..." />-->
+        <!--            </a-form-item>-->
+        <!--            <a-form-item-->
+        <!--              label="选项 结果"-->
+        <!--              v-if="app.appType === APP_TYPE_ENUM.TEST"-->
+        <!--            >-->
+        <!--              <a-input-->
+        <!--                v-model="option.result"-->
+        <!--                placeholder="请输入选项结果..."-->
+        <!--              />-->
+        <!--            </a-form-item>-->
+        <!--            <a-form-item-->
+        <!--              label="选项 得分"-->
+        <!--              v-if="app.appType === APP_TYPE_ENUM.SCORE"-->
+        <!--            >-->
+        <!--              <a-input v-model="option.score" placeholder="请输入选项得分..." />-->
+        <!--            </a-form-item>-->
+        <!--            <a-space size="large">-->
+        <!--              <a-button-->
+        <!--                size="mini"-->
+        <!--                @click="addQuestionOption(question, optionIndex + 1)"-->
+        <!--                >添加选项-->
+        <!--              </a-button>-->
+        <!--              <a-button-->
+        <!--                size="mini"-->
+        <!--                status="danger"-->
+        <!--                @click="deleteQuestionOption(question, optionIndex)"-->
+        <!--                >删除选项-->
+        <!--              </a-button>-->
+        <!--            </a-space>-->
+        <!--          </a-form-item>-->
+        <!--          &lt;!&ndash;题目选项结尾&ndash;&gt;-->
+        <!--        </a-card>-->
       </a-form-item>
 
       <a-form-item>
@@ -102,21 +202,12 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, watchEffect } from "vue";
+import { ref, watchEffect } from "vue";
 import API from "@/api";
-import { useLoginUserStore } from "@/store/useStore";
 import { Message } from "@arco-design/web-vue";
 import { useRouter } from "vue-router";
-import {
-  addAppUsingPost,
-  editAppUsingPost,
-  getAppVoByIdUsingGet,
-} from "@/api/appController";
-import {
-  APP_SCORING_STRATEGY_MAP,
-  APP_TYPE_ENUM,
-  APP_TYPE_MAP,
-} from "@/constant/app";
+import { getAppVoByIdUsingGet } from "@/api/appController";
+import { APP_TYPE_ENUM } from "@/constant/app";
 import PictureUploader from "@/components/PictureUploader.vue";
 
 import { withDefaults, defineProps } from "vue";
@@ -125,6 +216,7 @@ import {
   editQuestionUsingPost,
   listQuestionVoByPageUsingPost,
 } from "@/api/questionController";
+import AiGenerateQuestionDrawer from "@/views/add/components/AiGenerateQuestionDrawer.vue";
 
 interface Props {
   appId: string;
@@ -239,5 +331,12 @@ const handleSubmit = async () => {
   } else {
     Message.error("操作失败，" + res.data.message);
   }
+};
+/**
+ * AI 生成题目成功后执行
+ */
+const onAiGenerateSuccess = (result: API.QuestionContentDTO[]) => {
+  Message.success(`AI 生成题目成功，生成${result.length}道题目`);
+  questionContent.value = [...questionContent.value, ...result];
 };
 </script>

@@ -27,10 +27,11 @@
           <a-button
             type="primary"
             circle
+            :loading="submitting"
             v-if="current === questionContent.length"
             :disabled="!currentAnswer"
             @click="doSubmit"
-            >查看结果
+            >{{ submitting ? "提交中" : "查看结果" }}
           </a-button>
           <a-button circle v-if="current > 1" @click="current -= 1"
             >上一题
@@ -70,6 +71,7 @@ const props = withDefaults(defineProps<Props>(), {
   },
 });
 const router = useRouter();
+const submitting = ref(false);
 
 // 题目内容结构
 const questionContent = ref<API.QuestionContentDTO[]>([]);
@@ -146,7 +148,7 @@ const doSubmit = async () => {
   if (!props.appId || !answerList) {
     return;
   }
-
+  submitting.value = true;
   const res = await addUserAnswerUsingPost({
     appId: props.appId as any,
     choices: answerList,
@@ -156,5 +158,6 @@ const doSubmit = async () => {
   } else {
     Message.error("提交答案失败，" + res.data.message);
   }
+  submitting.value = false;
 };
 </script>
