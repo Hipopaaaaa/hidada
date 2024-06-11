@@ -11,17 +11,20 @@ VALUES (1, 'Hipop', '2151e3349470a252807a9a1249e9d650', null, null, 'ohj',
 -- 应用表初始数据
 INSERT INTO app (id, appName, appDesc, appIcon, appType, scoringStrategy, reviewStatus, reviewMessage, reviewerId,
                  reviewTime, userId, createTime, updateTime, isDelete)
-VALUES (1, '自定义MBTI性格测试', '测试性格', '11', 1, 0, 1, null, null, null, 1, '2024-04-24 15:58:05', '2024-05-09 15:09:53', 0);
+VALUES (1, '自定义MBTI性格测试', '测试性格', '11', 1, 0, 1, null, null, null, 1, '2024-04-24 15:58:05',
+        '2024-05-09 15:09:53', 0);
 INSERT INTO app (id, appName, appDesc, appIcon, appType, scoringStrategy, reviewStatus, reviewMessage, reviewerId,
                  reviewTime, userId, createTime, updateTime, isDelete)
-VALUES (2, '自定义得分测试', '测试得分', '22', 0, 0, 1, null, null, null, 1, '2024-04-25 11:39:30', '2024-05-09 15:09:53', 0);
+VALUES (2, '自定义得分测试', '测试得分', '22', 0, 0, 1, null, null, null, 1, '2024-04-25 11:39:30',
+        '2024-05-09 15:09:53', 0);
 INSERT INTO app (id, appName, appDesc, appIcon, appType, scoringStrategy, reviewStatus, reviewMessage, reviewerId,
                  reviewTime, userId, createTime, updateTime, isDelete)
 VALUES (3, 'AI MBTI 性格测试', '快来测测你的 MBTI', '11', 1, 1, 1, null, null, null, 1, '2024-04-26 16:38:12',
         '2024-05-09 15:09:53', 0);
 INSERT INTO app (id, appName, appDesc, appIcon, appType, scoringStrategy, reviewStatus, reviewMessage, reviewerId,
                  reviewTime, userId, createTime, updateTime, isDelete)
-VALUES (4, 'AI 得分测试', '看看你熟悉多少首都', '22', 0, 1, 1, null, null, null, 1, '2024-04-26 16:38:56', '2024-05-09 15:09:53', 0);
+VALUES (4, 'AI 得分测试', '看看你熟悉多少首都', '22', 0, 1, 1, null, null, null, 1, '2024-04-26 16:38:56',
+        '2024-05-09 15:09:53', 0);
 
 -- 题目表初始数据
 INSERT INTO question (id, questionContent, appId, userId, createTime, updateTime, isDelete)
@@ -122,9 +125,22 @@ VALUES (19, '继续加油！', '还需努力哦', null, null, 0, '2024-04-25 15:
 -- 用户回答表初始数据
 INSERT INTO user_answer (id, appId, appType, choices, resultId, resultName, resultDesc, resultPicture, resultScore,
                          scoringStrategy, userId, createTime, updateTime, isDelete)
-VALUES (1, 1, 1, '["A","A","A","B","A","A","A","B","B","A"]', 1, 'ISTJ（物流师）', '忠诚可靠，被公认为务实，注重细节。', 'icon_url_istj',
+VALUES (1, 1, 1, '["A","A","A","B","A","A","A","B","B","A"]', 1, 'ISTJ（物流师）', '忠诚可靠，被公认为务实，注重细节。',
+        'icon_url_istj',
         null, 0, 1, '2024-05-09 15:08:22', '2024-05-09 15:10:13', 0);
 INSERT INTO user_answer (id, appId, appType, choices, resultId, resultName, resultDesc, resultPicture, resultScore,
                          scoringStrategy, userId, createTime, updateTime, isDelete)
-VALUES (2, 2, 0, '["D","C","B","D","A","C","C","B","C","A"]', 17, '首都知识大师', '你真棒棒哦，首都知识非常出色！', null, 10, 0, 1,
+VALUES (2, 2, 0, '["D","C","B","D","A","C","C","B","C","A"]', 17, '首都知识大师', '你真棒棒哦，首都知识非常出色！', null,
+        10, 0, 1,
         '2024-05-09 15:08:36', '2024-05-09 15:10:13', 0);
+
+-- 修改图标
+update app
+set appIcon = 'https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fc-ssl.duitang.com%2Fuploads%2Fblog%2F202009%2F13%2F20200913172831_df3ba.jpg&refer=http%3A%2F%2Fc-ssl.duitang.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1720253500&t=ea7a40df041f5a72b7bc3c6aed383198'
+where 1 = 1;
+update scoring_result
+set resultPicture = 'https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fc-ssl.duitang.com%2Fuploads%2Fblog%2F202009%2F13%2F20200913172831_df3ba.jpg&refer=http%3A%2F%2Fc-ssl.duitang.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1720253500&t=ea7a40df041f5a72b7bc3c6aed383198'
+where 1 = 1;
+update user_answer
+set resultPicture = 'https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fc-ssl.duitang.com%2Fuploads%2Fblog%2F202009%2F13%2F20200913172831_df3ba.jpg&refer=http%3A%2F%2Fc-ssl.duitang.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1720253500&t=ea7a40df041f5a72b7bc3c6aed383198'
+where 1 = 1;

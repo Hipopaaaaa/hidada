@@ -256,7 +256,7 @@ public class AppController {
         App oldApp = appService.getById(id);
         ThrowUtils.throwIf(oldApp==null,ErrorCode.NOT_FOUND_ERROR);
 
-        if(oldApp.getReviewerId().equals(reviewStatus)){
+        if(oldApp.getReviewStatus().equals(reviewStatus)){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"请勿重复审核");
         }
         User loginUser = userService.getLoginUser(request);

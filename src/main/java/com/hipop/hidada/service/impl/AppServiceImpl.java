@@ -118,12 +118,12 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         queryWrapper.like(StringUtils.isNotBlank(reviewMessage), "reviewMessage", reviewMessage);
 
         // 精确查询
-        queryWrapper.ne(ObjectUtils.isNotEmpty(notId), "id", notId);
-        queryWrapper.ne(StringUtils.isNotBlank(appIcon), "appIcon", appIcon);
-        queryWrapper.ne(ObjectUtils.isNotEmpty(appType), "appType", appType);
-        queryWrapper.ne(ObjectUtils.isNotEmpty(scoringStrategy), "scoringStrategy", scoringStrategy);
-        queryWrapper.ne(ObjectUtils.isNotEmpty(reviewStatus), "reviewStatus", reviewStatus);
-        queryWrapper.ne(ObjectUtils.isNotEmpty(reviewerId), "reviewerId", reviewerId);
+        queryWrapper.eq(ObjectUtils.isNotEmpty(notId), "id", notId);
+        queryWrapper.eq(StringUtils.isNotBlank(appIcon), "appIcon", appIcon);
+        queryWrapper.eq(ObjectUtils.isNotEmpty(appType), "appType", appType);
+        queryWrapper.eq(ObjectUtils.isNotEmpty(scoringStrategy), "scoringStrategy", scoringStrategy);
+        queryWrapper.eq(ObjectUtils.isNotEmpty(reviewStatus), "reviewStatus", reviewStatus);
+        queryWrapper.eq(ObjectUtils.isNotEmpty(reviewerId), "reviewerId", reviewerId);
         queryWrapper.eq(ObjectUtils.isNotEmpty(id), "id", id);
         queryWrapper.eq(ObjectUtils.isNotEmpty(userId), "userId", userId);
         // 排序规则
