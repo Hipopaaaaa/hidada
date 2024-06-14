@@ -1,5 +1,6 @@
 package com.hipop.hidada.controller;
 
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hipop.hidada.annotation.AuthCheck;
@@ -20,13 +21,20 @@ import com.hipop.hidada.model.vo.QuestionVO;
 import com.hipop.hidada.service.AppService;
 import com.hipop.hidada.service.QuestionService;
 import com.hipop.hidada.service.UserService;
+import com.zhipu.oapi.service.v4.model.ModelData;
+import io.reactivex.Flowable;
+import io.reactivex.Scheduler;
+import io.reactivex.schedulers.Schedulers;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 题目接口
@@ -306,6 +314,65 @@ public class QuestionController {
         String json = result.substring(start, end + 1);
         List<QuestionContentDTO> questionContentDTOList = JSONUtil.toList(json, QuestionContentDTO.class);
         return ResultUtils.success(questionContentDTOList);
+    }
+
+    /**
+     * ai 生成题目，流式返回
+     * @param aiGenerateQuestionRequest
+     * @return
+     */
+    @GetMapping("/ai_generate/sse")
+    public SseEmitter aiGenerateQuestionSSE(
+            AiGenerateQuestionRequest aiGenerateQuestionRequest) {
+        ThrowUtils.throwIf(aiGenerateQuestionRequest == null, ErrorCode.PARAMS_ERROR);
+        Long appId = aiGenerateQuestionRequest.getAppId();
+        int questionNumber = aiGenerateQuestionRequest.getQuestionNumber();
+        int optionNumber = aiGenerateQuestionRequest.getOptionNumber();
+        // 获取应用信息
+        App app = appService.getById(appId);
+        ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR);
+        // 封装 Prompt
+        String userMessage = this.getGenerateQuestionUserMessage(app, questionNumber, optionNumber);
+        // 建立SSE连接对象，0-永不超时
+        SseEmitter sseEmitter = new SseEmitter(0L);
+        // AI 生成
+        Flowable<ModelData> modelDataFlowable = aiManager.doStreamRequest(GENERATE_QUESTION_SYSTEM_MESSAGE, userMessage, null);
+        // 左括号计数器，除了默认之外，当回归为0时，表示左括号等于右括号，可以截取
+        AtomicInteger counter = new AtomicInteger(0);
+        // 用于拼接题目
+        StringBuilder stringBuilder = new StringBuilder();
+        modelDataFlowable
+                .observeOn(Schedulers.io())
+                .map(modelData->modelData.getChoices().get(0).getDelta().getContent())
+                .map(message->message.replaceAll("\\s",""))
+                .filter(StrUtil::isNotBlank)
+                .flatMap(message->{
+                    List<Character> characterList=new ArrayList<>();
+                    for (char c : message.toCharArray()) {
+                        characterList.add(c);
+                    }
+                    return Flowable.fromIterable(characterList);
+                })
+                .doOnNext(c->{
+                    if(c=='{'){
+                        counter.addAndGet(1);
+                    }
+                    if(counter.get()>0){
+                        stringBuilder.append(c);
+                    }
+                    if(c=='}'){
+                        counter.addAndGet(-1);
+                        if(counter.get()==0){
+                            // 拼接题目，发送，重置
+                            sseEmitter.send(JSONUtil.toJsonStr(stringBuilder.toString()));
+                            stringBuilder.setLength(0);
+                        }
+                    }
+                })
+                .doOnError((e)->log.error("sse error",e))
+                .doOnComplete(sseEmitter::complete)
+                .subscribe();
+        return sseEmitter;
     }
     // endregiosn
 }

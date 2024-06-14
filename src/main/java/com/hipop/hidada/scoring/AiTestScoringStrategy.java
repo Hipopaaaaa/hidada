@@ -1,7 +1,12 @@
 package com.hipop.hidada.scoring;
 
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.crypto.digest.DigestUtil;
 import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.hipop.hidada.manager.AiManager;
 import com.hipop.hidada.model.dto.question.QuestionAnswerDTO;
 import com.hipop.hidada.model.dto.question.QuestionContentDTO;
@@ -18,13 +23,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Hipopaaaaa
  * @create 2024/6/4 14:10
  * AI 测评类应用评分策略
  */
-@ScoringStrategyConfig(appType = 1,scoringStrategy = 1)
+@ScoringStrategyConfig(appType = 1, scoringStrategy = 1)
 public class AiTestScoringStrategy implements ScoringStrategy {
 
     @Resource
@@ -32,6 +38,13 @@ public class AiTestScoringStrategy implements ScoringStrategy {
 
     @Resource
     private AiManager aiManager;
+
+    /**
+     * AI 评分 本地缓存
+     */
+    private final Cache<String, String> answerCacheMap = Caffeine.newBuilder().
+            initialCapacity(1024).expireAfterAccess(5L, TimeUnit.MINUTES).
+            build();
 
     /**
      * AI 评分系统消息
@@ -53,8 +66,21 @@ public class AiTestScoringStrategy implements ScoringStrategy {
 
     @Override
     public UserAnswer doScore(List<String> choices, App app) throws Exception {
-        // 1.查询题目和题目结果信息
+        // 先查缓存，有缓存则直接返回
         Long appId = app.getId();
+        String choicesJsonStr = JSONUtil.toJsonStr(choices);
+        String cacheKey = this.buildCacheKey(appId, choicesJsonStr);
+        String answerJson = answerCacheMap.getIfPresent(cacheKey);
+        if(StrUtil.isNotBlank(answerJson)){
+            UserAnswer userAnswer = JSONUtil.toBean(answerJson, UserAnswer.class);
+            userAnswer.setAppId(appId);
+            userAnswer.setAppType(app.getAppType());
+            userAnswer.setScoringStrategy(app.getScoringStrategy());
+            userAnswer.setChoices(choicesJsonStr);
+            return userAnswer;
+        }
+
+        // 1.查询题目和题目结果信息
         Question question = questionService.getOne(Wrappers.lambdaQuery(Question.class).eq(Question::getAppId, appId));
 
         QuestionVO questionVO = QuestionVO.objToVo(question);
@@ -67,15 +93,16 @@ public class AiTestScoringStrategy implements ScoringStrategy {
         int end = result.lastIndexOf("}");
         String json = result.substring(start, end + 1);
 
+        // 设置缓存
+        answerCacheMap.put(cacheKey,json);
 
         // 3.构造返回值，填充答案对象
         UserAnswer userAnswer = JSONUtil.toBean(json, UserAnswer.class);
         userAnswer.setAppId(appId);
         userAnswer.setAppType(app.getAppType());
         userAnswer.setScoringStrategy(app.getScoringStrategy());
-        userAnswer.setChoices(JSONUtil.toJsonStr(choices));
+        userAnswer.setChoices(choicesJsonStr);
         //todo ai评分后缺少图片
-
         return userAnswer;
     }
 
@@ -100,5 +127,15 @@ public class AiTestScoringStrategy implements ScoringStrategy {
         }
         userMessage.append(JSONUtil.toJsonStr(questionAnswerDTOList));
         return userMessage.toString();
+    }
+
+    /**
+     * 构建缓存key
+     * @param appId
+     * @param choices
+     * @return
+     */
+    private String buildCacheKey(Long appId,String choices){
+        return DigestUtil.md5Hex(appId+":"+choices);
     }
 }
