@@ -11,18 +11,20 @@
         {{ appId }}
       </a-form-item>
       <a-form-item label="题目列表" :content-flex="false" :merge-props="false">
-        <a-space size="medium">
+        <a-space size="medium" style="margin-bottom: 16px">
           <a-button @click="addQuestion(questionContent.length)"
             >底部添加题目
           </a-button>
           <AiGenerateQuestionDrawer
             :appId="appId"
             :onSuccess="onAiGenerateSuccess"
+            :onSSESuccess="onAiGenerateSuccessSSE"
+            :onSSEStart="onSSEStart"
+            :onSSEClose="onSSEClose"
           />
         </a-space>
-        <!--遍历每道一幕-->
+        <!--遍历每道一题目-->
         <a-list
-          class="list-demo-action-layout"
           :grid-props="{ gutter: [20, 20], sm: 24, md: 24, lg: 24, xl: 12 }"
           :bordered="false"
           :data="questionContent"
@@ -339,4 +341,16 @@ const onAiGenerateSuccess = (result: API.QuestionContentDTO[]) => {
   Message.success(`AI 生成题目成功，生成${result.length}道题目`);
   questionContent.value = [...questionContent.value, ...result];
 };
+/**
+ * AI 生成题目成功后执行(SSE)
+ */
+const onAiGenerateSuccessSSE = (result: API.QuestionContentDTO) => {
+  questionContent.value = [...questionContent.value, result];
+};
+const onSSEStart=()=>{
+  Message.success("开始生成")
+}
+const onSSEClose=()=>{
+  Message.success("生成完毕")
+}
 </script>

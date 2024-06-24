@@ -29,7 +29,7 @@
             <a-button type="primary" :href="`/answer/do/${id}`"
               >开始答题</a-button
             >
-            <a-button>分享应用</a-button>
+            <a-button @click="doShare">分享应用</a-button>
             <a-button v-if="isMy" :href="`/add/question/${id}`"
               >设置题目
             </a-button>
@@ -44,6 +44,7 @@
         </a-col>
       </a-row>
     </a-card>
+    <ShareModal :link="shareLink" title="应用分享" ref="shareModelRef" />
   </div>
 </template>
 
@@ -56,6 +57,7 @@ import { withDefaults, defineProps } from "vue";
 import dayjs from "dayjs";
 import { useLoginUserStore } from "@/store/useStore";
 import { APP_SCORING_STRATEGY_MAP, APP_TYPE_MAP } from "../../constant/app";
+import ShareModal from "@/components/ShareModal.vue";
 
 interface Props {
   id: number;
@@ -91,6 +93,18 @@ const loadData = async () => {
   } else {
     Message.error("获取数据失败，" + res.data.message);
   }
+};
+// 分享链接
+const shareLink = `${window.location.protocol}//${window.location.host}/app/detail/${props.id}`;
+// 分享弹窗的引用
+const shareModelRef = ref();
+// 分享
+const doShare = (e: Event) => {
+  if (shareModelRef.value) {
+    shareModelRef.value.openModel();
+  }
+  // 阻止冒泡，防止跳转到详情页
+  e.stopPropagation();
 };
 
 watchEffect(() => {

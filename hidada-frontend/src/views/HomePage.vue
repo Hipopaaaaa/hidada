@@ -34,10 +34,8 @@ import AppCard from "@/components/AppCard.vue";
 import API from "@/api";
 import { Message } from "@arco-design/web-vue";
 import { REVIEW_STATUS_ENUM } from "@/constant/app";
-import {
-  listAppVoByPageUsingPost,
-} from "@/api/appController";
-
+import { listAppVoByPageUsingPost } from "@/api/appController";
+import ShareModal from "@/components/ShareModal.vue";
 
 const initSearchParams = {
   current: 1,

@@ -35,7 +35,7 @@
             <a-button type="primary" :href="`/answer/do/${data.appId}`"
               >去答题</a-button
             >
-            <a-button>分享结果</a-button>
+            <a-button @click="doShare">分享结果</a-button>
           </a-space>
         </a-col>
         <a-col flex="320px">
@@ -43,6 +43,7 @@
         </a-col>
       </a-row>
     </a-card>
+    <ShareModal :link="shareLink" title="应用分享" ref="shareModelRef" />
   </div>
 </template>
 
@@ -59,6 +60,7 @@ import {
   APP_TYPE_ENUM,
   APP_TYPE_MAP,
 } from "../../constant/app";
+import ShareModal from "@/components/ShareModal.vue";
 
 interface Props {
   id: number;
@@ -89,6 +91,18 @@ const loadData = async () => {
   } else {
     Message.error("获取数据失败，" + res.data.message);
   }
+};
+// 分享链接
+const shareLink = `${window.location.protocol}//${window.location.host}/answer/result/${props.id}`;
+// 分享弹窗的引用
+const shareModelRef = ref();
+// 分享
+const doShare = (e: Event) => {
+  if (shareModelRef.value) {
+    shareModelRef.value.openModel();
+  }
+  // 阻止冒泡，防止跳转到详情页
+  e.stopPropagation();
 };
 
 watchEffect(() => {

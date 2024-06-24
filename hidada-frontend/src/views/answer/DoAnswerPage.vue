@@ -59,7 +59,10 @@ import {
   editQuestionUsingPost,
   listQuestionVoByPageUsingPost,
 } from "@/api/questionController";
-import { addUserAnswerUsingPost } from "@/api/userAnswerController";
+import {
+  addUserAnswerUsingPost,
+  generateUserAnswerIdUsingGet,
+} from "@/api/userAnswerController";
 
 interface Props {
   appId: string;
@@ -101,6 +104,21 @@ const answerList = reactive<string[]>([]);
 const doRadioChange = (value: string) => {
   answerList[current.value - 1] = value;
 };
+const id = ref<number>();
+/**
+ * 生成唯一id
+ */
+const generateId = async () => {
+  const res = await generateUserAnswerIdUsingGet();
+  if (res.data.code === 0 && res.data.data) {
+    id.value = res.data.data;
+  } else {
+    Message.error("获取id失败，" + res.data.message);
+  }
+};
+watchEffect(() => {
+  generateId();
+});
 
 /**
  * 加载数据
@@ -152,6 +170,7 @@ const doSubmit = async () => {
   const res = await addUserAnswerUsingPost({
     appId: props.appId as any,
     choices: answerList,
+    id: id.value,
   });
   if (res.data.code === 0 && res.data.data) {
     router.push(`/answer/result/${res.data.data}`);

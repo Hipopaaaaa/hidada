@@ -2,6 +2,14 @@
 /* eslint-disable */
 import request from '@/request';
 
+/** generateUserAnswerId GET /api/userAnswer */
+export async function generateUserAnswerIdUsingGet(options?: { [key: string]: any }) {
+  return request<API.BaseResponseLong_>('/api/userAnswer', {
+    method: 'GET',
+    ...(options || {}),
+  });
+}
+
 /** addUserAnswer POST /api/userAnswer/add */
 export async function addUserAnswerUsingPost(
   body: API.UserAnswerAddRequest,

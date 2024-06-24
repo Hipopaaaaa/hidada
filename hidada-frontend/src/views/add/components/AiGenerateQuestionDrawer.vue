@@ -32,13 +32,21 @@
         />
       </a-form-item>
       <a-form-item>
-        <a-button
-          type="primary"
-          style="width: 120px"
-          html-type="submit"
-          :loading="submitting"
-          >{{ submitting ? "生成中..." : "一键生成" }}
-        </a-button>
+        <a-space>
+          <a-button
+            type="primary"
+            style="width: 120px"
+            html-type="submit"
+            :loading="submitting"
+            >{{ submitting ? "生成中..." : "一键生成" }}
+          </a-button>
+          <a-button
+            style="width: 120px"
+            :loading="submitting"
+            @click="handleSSESubmit"
+            >{{ submitting ? "生成中..." : "实时生成" }}
+          </a-button>
+        </a-space>
       </a-form-item>
     </a-form>
   </a-drawer>
@@ -54,6 +62,9 @@ import { aiGenerateQuestionUsingPost } from "@/api/questionController";
 interface Props {
   appId: string;
   onSuccess?: (result: API.QuestionContentDTO[]) => void;
+  onSSESuccess?: (result: API.QuestionContentDTO) => void;
+  onSSEStart?: (event: any) => void;
+  onSSEClose?: (event: any) => void;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -99,6 +110,39 @@ const handleSubmit = async () => {
   } else {
     Message.error("操作失败，" + res.data.message);
   }
+  submitting.value = false;
+};
+/**
+ * 提交(流式返回)
+ */
+const handleSSESubmit = async () => {
+  if (!props.appId) {
+    return;
+  }
+  submitting.value = true;
+
+  // todo 必须填写完整的后端地址
+  const eventSource = new EventSource(
+    "http://localhost:8101/api/question/ai_generate/sse/" +
+      `?appId=${props.appId}&optionNumber=${form.optionNumber}&questionNumber=${form.questionNumber}`
+  );
+  // 接收消息
+  eventSource.onmessage = (event) => {
+    props.onSSESuccess?.(JSON.parse(event.data));
+  };
+  eventSource.onerror = (event) => {
+    if (event.eventPhase === EventSource.CLOSED) {
+      console.log("关闭连接...");
+      props.onSSEClose?.(event);
+    }
+    eventSource.close();
+  };
+  eventSource.onopen = (event) => {
+    console.log("建立连接...");
+    props.onSSEStart?.(event);
+    handleCancel();
+  };
+
   submitting.value = false;
 };
 </script>

@@ -18,6 +18,7 @@ import AddScoringResultPage from "@/views/add/AddScoringResultPage.vue";
 import DoAnswerPage from "@/views/answer/DoAnswerPage.vue";
 import AnswerResultPage from "@/views/answer/AnswerResultPage.vue";
 import MyAnswerPage from "@/views/answer/MyAnswerPage.vue";
+import AppStatisticPage from "@/views/statistic/AppStatisticPage.vue";
 
 export const routes: Array<RouteRecordRaw> = [
   {
@@ -135,9 +136,20 @@ export const routes: Array<RouteRecordRaw> = [
     },
   },
   {
+    path: "/app_statistic",
+    name: "应用统计",
+    component: AppStatisticPage,
+    meta: {
+      access: ACCESS_ENUM.ADMIN,
+    },
+  },
+  {
     path: "/user",
     name: "用户",
     component: UserLayout,
+    meta: {
+      hideInMenu: true,
+    },
     children: [
       {
         path: "/user/login",
